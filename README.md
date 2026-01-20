@@ -1,2 +1,432 @@
 # Contract-tracker.html
 Follow and update on daily activities 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contract Tracker - Mobile</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 10px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .header .subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+        
+        .stat-card .number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-card .label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .contract-card {
+            background: white;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            border-left: 4px solid;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+        
+        .contract-card.urgent {
+            border-left-color: #ff4444;
+        }
+        
+        .contract-card.warning {
+            border-left-color: #ffaa00;
+        }
+        
+        .contract-card.active {
+            border-left-color: #44ff44;
+        }
+        
+        .contract-card h3 {
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .contract-meta {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .contract-meta span {
+            margin-right: 12px;
+        }
+        
+        .progress-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-top: 8px;
+            font-family: inherit;
+        }
+        
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 8px;
+        }
+        
+        .btn:active {
+            background: #5568d3;
+        }
+        
+        .btn-complete {
+            background: #44ff44;
+            color: #333;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 20px 0 10px 0;
+            color: #333;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        
+        .quick-add {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            cursor: pointer;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 Contract Tracker</h1>
+        <div class="subtitle">Maximum automation, minimal effort</div>
+    </div>
+    
+    <div class="stats">
+        <div class="stat-card">
+            <div class="number" id="totalContracts">0</div>
+            <div class="label">Total Active</div>
+        </div>
+        <div class="stat-card">
+            <div class="number" id="needsAttention">0</div>
+            <div class="label">Needs Attention</div>
+        </div>
+        <div class="stat-card">
+            <div class="number" id="completedToday">0</div>
+            <div class="label">Completed Today</div>
+        </div>
+        <div class="stat-card">
+            <div class="number" id="avgDays">0</div>
+            <div class="label">Avg Days Open</div>
+        </div>
+    </div>
+    
+    <div class="section-title">🔴 Urgent (>2 days stale)</div>
+    <div id="urgentList"></div>
+    
+    <div class="section-title">🟡 Needs Update (1-2 days)</div>
+    <div id="warningList"></div>
+    
+    <div class="section-title">🟢 Active (Updated recently)</div>
+    <div id="activeList"></div>
+    
+    <div class="quick-add" onclick="openAddModal()">+</div>
+    
+    <div class="modal" id="addModal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 20px;">Add New Contract</h2>
+            <form id="addForm">
+                <div class="form-group">
+                    <label>Contract Name *</label>
+                    <input type="text" id="contractName" required>
+                </div>
+                <div class="form-group">
+                    <label>Type</label>
+                    <select id="contractType">
+                        <option>Service Agreement</option>
+                        <option>Vendor Contract</option>
+                        <option>Client Agreement</option>
+                        <option>Employment</option>
+                        <option>NDA</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Due Date</label>
+                    <input type="date" id="dueDate">
+                </div>
+                <button type="submit" class="btn">Add Contract</button>
+                <button type="button" class="btn" onclick="closeAddModal()" style="background: #ccc; color: #333;">Cancel</button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // SharePoint REST API Configuration
+        const SITE_URL = 'YOUR_SITE_URL';
+        const LIST_NAME = 'Contract Tracker';
+        
+        // Sample data for demo (replace with actual SharePoint calls)
+        let contracts = [
+            {
+                id: 1,
+                name: 'ABC Services Agreement',
+                type: 'Service Agreement',
+                status: 'In Progress',
+                daysSinceUpdate: 3,
+                latestProgress: 'Waiting on client response',
+                dueDate: '2026-02-15'
+            },
+            {
+                id: 2,
+                name: 'XYZ Vendor Contract',
+                type: 'Vendor Contract',
+                status: 'In Progress',
+                daysSinceUpdate: 1,
+                latestProgress: 'Terms under review',
+                dueDate: '2026-01-25'
+            },
+            {
+                id: 3,
+                name: 'Marketing Services NDA',
+                type: 'NDA',
+                status: 'Pending',
+                daysSinceUpdate: 0,
+                latestProgress: 'Just created',
+                dueDate: '2026-01-30'
+            }
+        ];
+        
+        function renderContracts() {
+            const urgentList = document.getElementById('urgentList');
+            const warningList = document.getElementById('warningList');
+            const activeList = document.getElementById('activeList');
+            
+            urgentList.innerHTML = '';
+            warningList.innerHTML = '';
+            activeList.innerHTML = '';
+            
+            let urgent = 0, warning = 0, active = 0;
+            
+            contracts.forEach(contract => {
+                const card = createContractCard(contract);
+                
+                if (contract.daysSinceUpdate > 2) {
+                    urgentList.innerHTML += card;
+                    urgent++;
+                } else if (contract.daysSinceUpdate > 1) {
+                    warningList.innerHTML += card;
+                    warning++;
+                } else {
+                    activeList.innerHTML += card;
+                    active++;
+                }
+            });
+            
+            if (!urgent) urgentList.innerHTML = '<div class="empty-state">✅ Nothing urgent!</div>';
+            if (!warning) warningList.innerHTML = '<div class="empty-state">✅ All good here!</div>';
+            if (!active) activeList.innerHTML = '<div class="empty-state">No active contracts</div>';
+            
+            // Update stats
+            document.getElementById('totalContracts').textContent = contracts.length;
+            document.getElementById('needsAttention').textContent = urgent + warning;
+            document.getElementById('completedToday').textContent = 0;
+            document.getElementById('avgDays').textContent = Math.round(
+                contracts.reduce((sum, c) => sum + c.daysSinceUpdate, 0) / contracts.length
+            );
+        }
+        
+        function createContractCard(contract) {
+            const urgencyClass = contract.daysSinceUpdate > 2 ? 'urgent' : 
+                                 contract.daysSinceUpdate > 1 ? 'warning' : 'active';
+            
+            return `
+                <div class="contract-card ${urgencyClass}">
+                    <h3>${contract.name}</h3>
+                    <div class="contract-meta">
+                        <span>📋 ${contract.type}</span>
+                        <span>⏱️ ${contract.daysSinceUpdate} days stale</span>
+                        <span>📅 Due: ${contract.dueDate}</span>
+                    </div>
+                    <div style="font-size: 13px; color: #666; margin-bottom: 8px;">
+                        Last: ${contract.latestProgress}
+                    </div>
+                    <input type="text" class="progress-input" placeholder="Quick progress update..." 
+                           onkeypress="if(event.key==='Enter') updateProgress(${contract.id}, this.value)">
+                    <button class="btn btn-complete" onclick="markComplete(${contract.id})">
+                        ✅ Mark Complete
+                    </button>
+                </div>
+            `;
+        }
+        
+        function updateProgress(id, text) {
+            if (!text.trim()) return;
+            alert(`Updated contract ${id}: ${text}`);
+            // Here you'd call SharePoint REST API
+            // Reload data after update
+        }
+        
+        function markComplete(id) {
+            if (confirm('Mark this contract as complete?')) {
+                contracts = contracts.filter(c => c.id !== id);
+                renderContracts();
+                alert('Contract completed! 🎉');
+            }
+        }
+        
+        function openAddModal() {
+            document.getElementById('addModal').classList.add('active');
+        }
+        
+        function closeAddModal() {
+            document.getElementById('addModal').classList.remove('active');
+            document.getElementById('addForm').reset();
+        }
+        
+        document.getElementById('addForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const newContract = {
+                id: contracts.length + 1,
+                name: document.getElementById('contractName').value,
+                type: document.getElementById('contractType').value,
+                status: 'Pending',
+                daysSinceUpdate: 0,
+                latestProgress: 'Just created',
+                dueDate: document.getElementById('dueDate').value
+            };
+            
+            contracts.push(newContract);
+            renderContracts();
+            closeAddModal();
+            alert('Contract added! 🎉');
+        });
+        
+        // Initial render
+        renderContracts();
+    </script>
+</body>
+</html>
