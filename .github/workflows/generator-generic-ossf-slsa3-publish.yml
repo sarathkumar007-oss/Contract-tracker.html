@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Intelligent Shower Head Cleaning Log</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f5f5f5;
+        padding: 20px;
+        margin: 0;
+    }
+    .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+        text-align: center;
+        color: #2F75B5;
+        margin-bottom: 10px;
+    }
+    .header-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 15px;
+        margin-bottom: 20px;
+        padding: 15px;
+        background: #E7F3FF;
+        border-radius: 5px;
+    }
+    .header-info div {
+        display: flex;
+        flex-direction: column;
+    }
+    .header-info label {
+        font-weight: bold;
+        color: #2F75B5;
+        margin-bottom: 5px;
+    }
+    .header-info input, .header-info select {
+        padding: 8px;
+        border: 2px solid #2F75B5;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+    .qr-section {
+        text-align: center;
+        margin: 20px 0;
+        padding: 20px;
+        background: #FFF9E6;
+        border: 2px dashed #FFA500;
+        border-radius: 5px;
+    }
+    .qr-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+    }
+    .qr-item {
+        text-align: center;
+        padding: 10px;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+    .qr-item canvas {
+        margin: 10px auto;
+        display: block;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+        font-size: 12px;
+    }
+    th, td {
+        border: 2px solid #2F75B5;
+        padding: 8px;
+        text-align: center;
+    }
+    th {
+        background-color: #2F75B5;
+        color: white;
+        font-weight: bold;
+    }
+    .category-header {
+        background-color: #5B9BD5;
+        color: white;
+        font-weight: bold;
+        text-align: left;
+        padding: 10px;
+    }
+    .checkpoint-label {
+        background-color: #D9E1F2;
+        font-weight: bold;
+        text-align: left;
+        padding: 8px;
+    }
+    .meta-row {
+        background-color: #BDD7EE;
+        font-weight: bold;
+    }
+    .signature-cell {
+        height: 40px;
+        background: white;
+    }
+    .status-cell {
+        position: relative;
+        cursor: pointer;
+        user-select: none;
+        min-height: 30px;
+    }
+    .status-cell:hover {
+        background: #f0f0f0;
+    }
+    .status-green { background-color: #90EE90 !important; }
+    .status-yellow { background-color: #FFD700 !important; }
+    .status-red { background-color: #FF6B6B !important; }
+    .status-indicator {
+        font-size: 20px;
+        font-weight: bold;
+    }
+    .notes-cell {
+        min-height: 50px;
+        background: #FFFACD;
+        text-align: left;
+        padding: 5px;
+    }
+    .notes-cell textarea {
+        width: 95%;
+        height: 45px;
+        border: 1px solid #ccc;
+        padding: 3px;
+        font-size: 11px;
+        resize: vertical;
+    }
+    .action-required {
+        background: #FFE5E5;
+        font-weight: bold;
+    }
+    .summary-section {
+        margin-top: 30px;
+        padding: 20px;
+        background: #F0F8FF;
+        border: 2px solid #2F75B5;
+        border-radius: 5px;
+    }
+    .summary-section h2 {
+        color: #2F75B5;
+        margin-top: 0;
+    }
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+    }
+    .summary-card {
+        padding: 15px;
+        background: white;
+        border-radius: 5px;
+        border-left: 4px solid #2F75B5;
+    }
+    .summary-card h3 {
+        margin-top: 0;
+        color: #2F75B5;
+        font-size: 14px;
+    }
+    .legend {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin: 20px 0;
+        padding: 10px;
+        background: #f9f9f9;
+        border-radius: 5px;
+    }
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .legend-box {
+        width: 30px;
+        height: 30px;
+        border: 2px solid #333;
+        border-radius: 3px;
+    }
+    .print-btn {
+        background: #2F75B5;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        font-size: 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        display: block;
+        margin: 20px auto;
+    }
+    .print-btn:hover {
+        background: #1F5A8A;
+    }
+    @media print {
+        .print-btn, .qr-section { display: none; }
+        body { background: white; padding: 0; }
+        .container { box-shadow: none; }
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🚿 INTELLIGENT SHOWER HEAD CLEANING LOG</h1>
+    <p style="text-align: center; color: #666; margin-top: -10px;">Performance Tracking System – 8 Cleaning Cycles (Month: _______)</p>
+
+```
+<div class="header-info">
+    <div>
+        <label>Facility/Location:</label>
+        <input type="text" placeholder="Enter facility name">
+    </div>
+    <div>
+        <label>Month/Period:</label>
+        <input type="text" placeholder="e.g., January 2026">
+    </div>
+    <div>
+        <label>Total Showers:</label>
+        <select id="showerCount">
+            <option value="5">5 Showers</option>
+            <option value="10">10 Showers</option>
+            <option value="15">15 Showers</option>
+            <option value="20">20 Showers</option>
+        </select>
+    </div>
+</div>
+
+<div class="qr-section">
+    <h3>📱 QR CODES PER SHOWER - Print & Attach to Each Shower Location</h3>
+    <p style="color: #666; font-size: 13px;">Staff can scan to access this log digitally. Print this section, cut out each QR code, and laminate near corresponding shower.</p>
+    <div class="qr-grid" id="qrGrid"></div>
+</div>
+
+<div class="legend">
+    <div class="legend-item">
+        <div class="legend-box status-green"></div>
+        <span><strong>GREEN</strong> = Good Condition</span>
+    </div>
+    <div class="legend-item">
+        <div class="legend-box status-yellow"></div>
+        <span><strong>YELLOW</strong> = Minor Issue Noted</span>
+    </div>
+    <div class="legend-item">
+        <div class="legend-box status-red"></div>
+        <span><strong>RED</strong> = Maintenance Required</span>
+    </div>
+    <div class="legend-item">
+        <span style="font-style: italic;">Click cells to toggle status</span>
+    </div>
+</div>
+
+<table id="mainTable">
+    <thead>
+        <tr>
+            <th style="width: 200px;">CHECKPOINT</th>
+            <th>Clean 1</th>
+            <th>Clean 2</th>
+            <th>Clean 3</th>
+            <th>Clean 4</th>
+            <th>Clean 5</th>
+            <th>Clean 6</th>
+            <th>Clean 7</th>
+            <th>Clean 8</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- META INFORMATION -->
+        <tr>
+            <td class="meta-row">📅 Date</td>
+            <td><input type="date" style="width:90%;border:none;text-align:center;"></td>
+            <td><input type="date" style="width:90%;border:none;text-align:center;"></td>
+            <td><input type="date" style="width:90%;border:none;text-align:center;"></td>
+            <td><input type="date" style="width:90%;border:none;text-align:center;"></td>
+            <td><input type="date" style="width:90%;border:none;text-align:center;"></td>
+            <td><input type="date" style="width:90%;border:none;text-align:center;"></td>
+            <td><input type="date" style="width:90%;border:none;text-align:center;"></td>
+            <td><input type="date" style="width:90%;border:none;text-align:center;"></td>
+        </tr>
+        <tr>
+            <td class="meta-row">🚿 Shower No.</td>
+            <td><input type="text" style="width:90%;border:none;text-align:center;" placeholder="#"></td>
+            <td><input type="text" style="width:90%;border:none;text-align:center;" placeholder="#"></td>
+            <td><input type="text" style="width:90%;border:none;text-align:center;" placeholder="#"></td>
+            <td><input type="text" style="width:90%;border:none;text-align:center;" placeholder="#"></td>
+            <td><input type="text" style="width:90%;border:none;text-align:center;" placeholder="#"></td>
+            <td><input type="text" style="width:90%;border:none;text-align:center;" placeholder="#"></td>
+            <td><input type="text" style="width:90%;border:none;text-align:center;" placeholder="#"></td>
+            <td><input type="text" style="width:90%;border:none;text-align:center;" placeholder="#"></td>
+        </tr>
+        <tr>
+            <td class="meta-row">👤 Staff Name</td>
+            <td><input type="text" style="width:90%;border:none;text-align:center;font-size:11px;"></td>
+            <td><input type="text" style="width:90%;border:none;text-align:center;font-size:11px;"></td>
+            <td><input type="text" style="width:90%;border:none;text-align:center;font-size:11px;"></td>
+            <td><input type="text" style="width:90%;border:none;text-align:center;font-size:11px;"></td>
+            <td><input type="text" style="width:90%;border:none;text-align:center;font-size:11px;"></td>
+            <td><input type="text" style="width:90%;border:none;text-align:center;font-size:11px;"></td>
+            <td><input type="text" style="width:90%;border:none;text-align:center;font-size:11px;"></td>
+            <td><input type="text" style="width:90%;border:none;text-align:center;font-size:11px;"></td>
+        </tr>
+        <tr>
+            <td class="meta-row">⏰ Completion Time</td>
+            <td><input type="time" style="width:90%;border:none;text-align:center;"></td>
+            <td><input type="time" style="width:90%;border:none;text-align:center;"></td>
+            <td><input type="time" style="width:90%;border:none;text-align:center;"></td>
+            <td><input type="time" style="width:90%;border:none;text-align:center;"></td>
+            <td><input type="time" style="width:90%;border:none;text-align:center;"></td>
+            <td><input type="time" style="width:90%;border:none;text-align:center;"></td>
+            <td><input type="time" style="width:90%;border:none;text-align:center;"></td>
+            <td><input type="time" style="width:90%;border:none;text-align:center;"></td>
+        </tr>
+        <tr>
+            <td class="meta-row">✍️ Staff Signature</td>
+            <td class="signature-cell"></td>
+            <td class="signature-cell"></td>
+            <td class="signature-cell"></td>
+            <td class="signature-cell"></td>
+            <td class="signature-cell"></td>
+            <td class="signature-cell"></td>
+            <td class="signature-cell"></td>
+            <td class="signature-cell"></td>
+        </tr>
+
+        <!-- CLEANING CHECKLIST -->
+        <tr>
+            <td colspan="9" class="category-header">🧼 CLEANING CHECKLIST (Click cells to set status)</td>
+        </tr>
+        <tr>
+            <td class="checkpoint-label">Outer surface wiped clean</td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+        </tr>
+        <tr>
+            <td class="checkpoint-label">Nozzle face descaled</td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+        </tr>
+        <tr>
+            <td class="checkpoint-label">Rubber nozzles loosened</td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+        </tr>
+        <tr>
+            <td class="checkpoint-label">Water flow checked (adequate pressure)</td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+        </tr>
+        <tr>
+            <td class="checkpoint-label">Leakage inspected (connections/hose)</td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+        </tr>
+        <tr>
+            <td class="checkpoint-label">Chrome/finish condition checked</td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+        </tr>
+        <tr>
+            <td class="checkpoint-label">Area cleaned & dried</td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+            <td class="status-cell" onclick="cycleStatus(this)"></td>
+        </tr>
+
+        <!-- NOTES SECTION -->
+        <tr>
+            <td colspan="9" class="category-header">📝 ISSUES / NOTES (Document any problems, unusual observations, or actions taken)</td>
+        </tr>
+        <tr>
+            <td class="checkpoint-label">Staff Notes</td>
+            <td class="notes-cell"><textarea placeholder="Any issues?"></textarea></td>
+            <td class="notes-cell"><textarea placeholder="Any issues?"></textarea></td>
+            <td class="notes-cell"><textarea placeholder="Any issues?"></textarea></td>
+            <td class="notes-cell"><textarea placeholder="Any issues?"></textarea></td>
+            <td class="notes-cell"><textarea placeholder="Any issues?"></textarea></td>
+            <td class="notes-cell"><textarea placeholder="Any issues?"></textarea></td>
+            <td class="notes-cell"><textarea placeholder="Any issues?"></textarea></td>
+            <td class="notes-cell"><textarea placeholder="Any issues?"></textarea></td>
+        </tr>
+
+        <!-- ACTION REQUIRED -->
+        <tr>
+            <td colspan="9" class="category-header">⚠️ ACTION REQUIRED (Maintenance, repairs, or follow-up needed)</td>
+        </tr>
+        <tr>
+            <td class="checkpoint-label action-required">Next Action Needed?</td>
+            <td class="notes-cell action-required"><textarea placeholder="e.g., Replace gasket by 1/30"></textarea></td>
+            <td class="notes-cell action-required"><textarea placeholder="e.g., Replace gasket by 1/30"></textarea></td>
+            <td class="notes-cell action-required"><textarea placeholder="e.g., Replace gasket by 1/30"></textarea></td>
+            <td class="notes-cell action-required"><textarea placeholder="e.g., Replace gasket by 1/30"></textarea></td>
+            <td class="notes-cell action-required"><textarea placeholder="e.g., Replace gasket by 1/30"></textarea></td>
+            <td class="notes-cell action-required"><textarea placeholder="e.g., Replace gasket by 1/30"></textarea></td>
+            <td class="notes-cell action-required"><textarea placeholder="e.g., Replace gasket by 1/30"></textarea></td>
+            <td class="notes-cell action-required"><textarea placeholder="e.g., Replace gasket by 1/30"></textarea></td>
+        </tr>
+
+        <!-- SUPERVISOR VERIFICATION -->
+        <tr>
+            <td colspan="9" class="category-header">✅ SUPERVISOR VERIFICATION (Must verify within 24 hours)</td>
+        </tr>
+        <tr>
+            <td class="meta-row">👔 Supervisor Name</td>
+            <td><input type="text" style="width:90%;border:none;text-align:center;font-size:11px;"></td>
+            <td><input type="text" style="width:90%;border:none;text-align:center;font-size:11px;"></td>
+            <td><input type="text" style="width:90%;border:none;text-align:center;font-size:11px;"></td>
+            <td><input type="text" style="width:90%;border:none;text-align:center;font-size:11px;"></td>
+            <td><input type="text" style="width:90%;border:none;text-align:center;font-size:11px;"></td>
+            <td><input type="text" style="width:90%;border:none;text-align:center;font-size:11px;"></td>
+            <td><input type="text" style="width:90%;border:none;text-align:center;font-size:11px;"></td>
+            <td><input type="text" style="width:90%;border:none;text-align:center;font-size:11px;"></td>
+        </tr>
+        <tr>
+            <td class="meta-row">⏰ Verification Time</td>
+            <td><input type="time" style="width:90%;border:none;text-align:center;"></td>
+            <td><input type="time" style="width:90%;border:none;text-align:center;"></td>
+            <td><input type="time" style="width:90%;border:none;text-align:center;"></td>
+            <td><input type="time" style="width:90%;border:none;text-align:center;"></td>
+            <td><input type="time" style="width:90%;border:none;text-align:center;"></td>
+            <td><input type="time" style="width:90%;border:none;text-align:center;"></td>
+            <td><input type="time" style="width:90%;border:none;text-align:center;"></td>
+            <td><input type="time" style="width:90%;border:none;text-align:center;"></td>
+        </tr>
+        <tr>
+            <td class="meta-row">✍️ Supervisor Signature</td>
+            <td class="signature-cell"></td>
+            <td class="signature-cell"></td>
+            <td class="signature-cell"></td>
+            <td class="signature-cell"></td>
+            <td class="signature-cell"></td>
+            <td class="signature-cell"></td>
+            <td class="signature-cell"></td>
+            <td class="signature-cell"></td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="summary-section">
+    <h2>📊 MONTHLY PERFORMANCE SUMMARY</h2>
+    <p style="color: #666; margin-bottom: 15px;">Complete at end of month to identify trends and improvement areas</p>
+    
+    <div class="summary-grid">
+        <div class="summary-card">
+            <h3>Most Problematic Shower(s)</h3>
+            <textarea style="width:100%;height:60px;border:1px solid #ccc;padding:5px;" placeholder="List shower numbers with recurring issues..."></textarea>
+        </div>
+        
+        <div class="summary-card">
+            <h3>Most Common Issue Type</h3>
+            <textarea style="width:100%;height:60px;border:1px solid #ccc;padding:5px;" placeholder="e.g., Low water pressure, mineral buildup..."></textarea>
+        </div>
+        
+        <div class="summary-card">
+            <h3>Maintenance Requests Filed</h3>
+            <textarea style="width:100%;height:60px;border:1px solid #ccc;padding:5px;" placeholder="List all maintenance tickets created this month..."></textarea>
+        </div>
+        
+        <div class="summary-card">
+            <h3>Staff Performance Notes</h3>
+            <textarea style="width:100%;height:60px;border:1px solid #ccc;padding:5px;" placeholder="Commendations, retraining needs, pattern observations..."></textarea>
+        </div>
+        
+        <div class="summary-card">
+            <h3>Red Flags (Urgent Issues)</h3>
+            <textarea style="width:100%;height:60px;border:1px solid #ccc;padding:5px;" placeholder="Any safety concerns, recurring failures, liability risks..."></textarea>
+        </div>
+        
+        <div class="summary-card">
+            <h3>Improvement Actions</h3>
+            <textarea style="width:100%;height:60px;border:1px solid #ccc;padding:5px;" placeholder="What will we do differently next month?"></textarea>
+        </div>
+    </div>
+
+    <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 5px;">
+        <strong>Manager Review & Sign-off:</strong>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 10px;">
+            <div>
+                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Name:</label>
+                <input type="text" style="width: 100%; padding: 8px; border: 1px solid #ccc;">
+            </div>
+            <div>
+                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Date:</label>
+                <input type="date" style="width: 100%; padding: 8px; border: 1px solid #ccc;">
+            </div>
+            <div>
+                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Signature:</label>
+                <div style="border: 1px solid #ccc; height: 40px; background: white;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<button class="print-btn" onclick="window.print()">🖨️ PRINT THIS LOG</button>
+```
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script>
+// Generate QR codes for each shower
+function generateQRCodes() {
+    const qrGrid = document.getElementById('qrGrid');
+    const showerCount = parseInt(document.getElementById('showerCount').value);
+    qrGrid.innerHTML = '';
+    
+    const currentUrl = window.location.href;
+    
+    for (let i = 1; i <= showerCount; i++) {
+        const qrItem = document.createElement('div');
+        qrItem.className = 'qr-item';
+        qrItem.innerHTML = `<strong>SHOWER #${i}</strong><div id="qr${i}"></div><small>Scan to access log</small>`;
+        qrGrid.appendChild(qrItem);
+        
+        new QRCode(document.getElementById(`qr${i}`), {
+            text: `${currentUrl}?shower=${i}`,
+            width: 100,
+            height: 100
+        });
+    }
+}
+
+// Status cycling functionality
+function cycleStatus(cell) {
+    const classes = ['', 'status-green', 'status-yellow', 'status-red'];
+    const symbols = ['', '✓', '⚠', '✗'];
+    
+    let currentIndex = 0;
+    for (let i = 0; i < classes.length; i++) {
+        if (cell.classList.contains(classes[i])) {
+            currentIndex = i;
+            break;
+        }
+    }
+    
+    // Remove current class
+    cell.classList.remove(classes[currentIndex]);
+    
+    // Add next class
+    const nextIndex = (currentIndex + 1) % classes.length;
+    if (classes[nextIndex]) {
+        cell.classList.add(classes[nextIndex]);
+    }
+    
+    // Update symbol
+    cell.innerHTML = `<span class="status-indicator">${symbols[nextIndex]}</span>`;
+}
+
+// Initialize QR codes on page load
+document.addEventListener('DOMContentLoaded', function() {
+    generateQRCodes();
+    
+    // Regenerate QR codes when shower count changes
+    document.getElementById('showerCount').addEventListener('change', generateQRCodes);
+});
+</script>
+
+</body>
+</html>
