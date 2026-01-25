@@ -1,200 +1,220 @@
-    body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-        background: #f5f5f5;
-        padding: 10px;
-    }
-    
-    .header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 20px;
-        border-radius: 12px;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-    
-    .header h1 {
-        font-size: 24px;
-        margin-bottom: 5px;
-    }
-    
-    .header .subtitle {
-        font-size: 14px;
-        opacity: 0.9;
-    }
-    
-    .stats {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
-        margin-bottom: 20px;
-    }
-    
-    .stat-card {
-        background: white;
-        padding: 15px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-    }
-    
-    .stat-card .number {
-        font-size: 32px;
-        font-weight: bold;
-        color: #667eea;
-    }
-    
-    .stat-card .label {
-        font-size: 12px;
-        color: #666;
-        margin-top: 5px;
-    }
-    
-    .contract-card {
-        background: white;
-        padding: 15px;
-        margin-bottom: 12px;
-        border-radius: 8px;
-        border-left: 4px solid;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-    }
-    
-    .contract-card.urgent {
-        border-left-color: #ff4444;
-    }
-    
-    .contract-card.warning {
-        border-left-color: #ffaa00;
-    }
-    
-    .contract-card.active {
-        border-left-color: #44ff44;
-    }
-    
-    .contract-card h3 {
-        font-size: 16px;
-        margin-bottom: 8px;
-        color: #333;
-    }
-    
-    .contract-meta {
-        font-size: 13px;
-        color: #666;
-        margin-bottom: 8px;
-    }
-    
-    .contract-meta span {
-        margin-right: 12px;
-    }
-    
-    .progress-input {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        font-size: 14px;
-        margin-top: 8px;
-        font-family: inherit;
-    }
-    
-    .btn {
-        background: #667eea;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 6px;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        width: 100%;
-        margin-top: 8px;
-    }
-    
-    .btn:active {
-        background: #5568d3;
-    }
-    
-    .btn-complete {
-        background: #44ff44;
-        color: #333;
-    }
-    
-    .section-title {
-        font-size: 18px;
-        font-weight: bold;
-        margin: 20px 0 10px 0;
-        color: #333;
-    }
-    
-    .empty-state {
-        text-align: center;
-        padding: 40px 20px;
-        color: #999;
-    }
-    
-    .quick-add {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        width: 60px;
-        height: 60px;
-        background: #667eea;
-        color: white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 32px;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        cursor: pointer;
-    }
-    
-    .modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0,0,0,0.5);
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-    }
-    
-    .modal.active {
-        display: flex;
-    }
-    
-    .modal-content {
-        background: white;
-        padding: 20px;
-        border-radius: 12px;
-        width: 100%;
-        max-width: 500px;
-        max-height: 90vh;
-        overflow-y: auto;
-    }
-    
-    .form-group {
-        margin-bottom: 15px;
-    }
-    
-    .form-group label {
-        display: block;
-        font-size: 14px;
-        font-weight: 600;
-        margin-bottom: 5px;
-        color: #333;
-    }
-    
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        font-size: 14px;
-        font-family: inherit;
-    }
-</style>
+import React, { useState, useEffect } from 'react';
+import { base44 } from '@/api/base44Client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Loader2, Calendar, Filter, Download, Users } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import moment from 'moment';
+
+import PageHeader from '@/components/common/PageHeader';
+import AttendanceCard from '@/components/attendance/AttendanceCard';
+import EmptyState from '@/components/common/EmptyState';
+import ExportButton from '@/components/export/ExportButton';
+
+export default function Attendance() {
+  const [user, setUser] = useState(null);
+  const [dateFilter, setDateFilter] = useState(moment().format('YYYY-MM-DD'));
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [view, setView] = useState('cards');
+
+  useEffect(() => {
+    const loadUser = async () => {
+      const currentUser = await base44.auth.me();
+      setUser(currentUser);
+    };
+    loadUser();
+  }, []);
+
+  const isAdmin = user?.role === 'admin' || user?.user_role === 'owner' || user?.user_role === 'admin';
+
+  const { data: attendance = [], isLoading } = useQuery({
+    queryKey: ['attendance', dateFilter],
+    queryFn: () => base44.entities.Attendance.filter({ date: dateFilter }),
+  });
+
+  // Filter attendance based on user role and filters
+  const filteredAttendance = attendance.filter(record => {
+    const statusMatch = statusFilter === 'all' || record.status === statusFilter;
+    const userMatch = isAdmin || record.staff_email === user?.email;
+    return statusMatch && userMatch;
+  });
+
+  const statusStyles = {
+    punched_in: 'bg-emerald-100 text-emerald-700',
+    punched_out: 'bg-blue-100 text-blue-700',
+    absent: 'bg-red-100 text-red-700'
+  };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto">
+        <PageHeader
+          title="Attendance Records"
+          subtitle={isAdmin ? "View and manage staff attendance" : "Your attendance history"}
+        >
+          {filteredAttendance.length > 0 && (
+            <ExportButton 
+              data={filteredAttendance} 
+              filename="attendance_records"
+              entityType="Attendance"
+            />
+          )}
+        </PageHeader>
+
+        {/* Filters */}
+        <Card className="mb-6 border-0 shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex items-center gap-2 flex-1">
+                <Calendar className="w-5 h-5 text-slate-400" />
+                <Input
+                  type="date"
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                  className="max-w-xs"
+                />
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Filter className="w-5 h-5 text-slate-400" />
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="punched_in">Punched In</SelectItem>
+                    <SelectItem value="punched_out">Punched Out</SelectItem>
+                    <SelectItem value="absent">Absent</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  variant={view === 'cards' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setView('cards')}
+                  className={view === 'cards' ? 'bg-indigo-600' : ''}
+                >
+                  Cards
+                </Button>
+                <Button
+                  variant={view === 'table' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setView('table')}
+                  className={view === 'table' ? 'bg-indigo-600' : ''}
+                >
+                  Table
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Summary Stats */}
+        {isAdmin && (
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-4 text-center">
+                <p className="text-2xl font-bold text-emerald-600">
+                  {filteredAttendance.filter(a => a.status === 'punched_in').length}
+                </p>
+                <p className="text-sm text-slate-500">Currently In</p>
+              </CardContent>
+            </Card>
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-4 text-center">
+                <p className="text-2xl font-bold text-blue-600">
+                  {filteredAttendance.filter(a => a.status === 'punched_out').length}
+                </p>
+                <p className="text-sm text-slate-500">Completed</p>
+              </CardContent>
+            </Card>
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-4 text-center">
+                <p className="text-2xl font-bold text-slate-600">
+                  {filteredAttendance.length}
+                </p>
+                <p className="text-sm text-slate-500">Total Records</p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Content */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+          </div>
+        ) : filteredAttendance.length === 0 ? (
+          <EmptyState
+            icon={Users}
+            title="No attendance records"
+            description={`No records found for ${moment(dateFilter).format('MMMM D, YYYY')}`}
+          />
+        ) : view === 'cards' ? (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredAttendance.map(record => (
+              <AttendanceCard key={record.id} attendance={record} />
+            ))}
+          </div>
+        ) : (
+          <Card className="border-0 shadow-sm overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-slate-50">
+                  <TableHead>Staff</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Punch In</TableHead>
+                  <TableHead>Punch Out</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Location</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredAttendance.map(record => (
+                  <TableRow key={record.id}>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium">{record.staff_name}</p>
+                        <p className="text-sm text-slate-500">{record.staff_email}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>{moment(record.date).format('MMM D, YYYY')}</TableCell>
+                    <TableCell>{record.punch_in_time || '—'}</TableCell>
+                    <TableCell>{record.punch_out_time || '—'}</TableCell>
+                    <TableCell>
+                      <Badge className={statusStyles[record.status]}>
+                        {record.status?.replace(/_/g, ' ')}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {record.punch_in_location ? (
+                        <span className="text-xs text-slate-500">
+                          {record.punch_in_location.latitude?.toFixed(4)}, {record.punch_in_location.longitude?.toFixed(4)}
+                        </span>
+                      ) : '—'}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+}
